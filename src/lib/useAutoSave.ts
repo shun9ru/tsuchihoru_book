@@ -16,7 +16,7 @@ export function useAutoSave(
   enabled = true,
 ) {
   const [status, setStatus] = useState<SaveStatus>('idle')
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const isFirstRender = useRef(true)
   const saveFnRef = useRef(saveFn)
   saveFnRef.current = saveFn

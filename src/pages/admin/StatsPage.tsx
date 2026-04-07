@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import EventTabs from '@/components/admin/EventTabs'
 import {
-  ArrowLeft,
   Users,
   Ticket,
   BarChart3,

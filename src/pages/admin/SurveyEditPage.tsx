@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import EventTabs from '@/components/admin/EventTabs'
 import {
-  ArrowLeft,
   Plus,
   Pencil,
   Trash2,
@@ -606,7 +605,7 @@ export default function SurveyEditPage() {
                   label="表示条件の親設問"
                   options={[
                     { value: '', label: '条件なし（常に表示）' },
-                    ...parentCandidates.map((q, i) => ({
+                    ...parentCandidates.map((q) => ({
                       value: q.id,
                       label: `Q${questions.indexOf(q) + 1}: ${q.question_text.slice(0, 30)}${q.question_text.length > 30 ? '…' : ''}`,
                     })),

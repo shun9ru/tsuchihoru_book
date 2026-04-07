@@ -16,9 +16,8 @@ export default function CautionEditPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [cautionText, setCautionText] = useState('')
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [, setSuccessMessage] = useState<string | null>(null)
   const [showPreview, setShowPreview] = useState(false)
 
   // Template states
