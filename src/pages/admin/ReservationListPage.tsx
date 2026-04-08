@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Users,
   FileText,
-  ClipboardList,
   Mail,
   CheckCircle2,
   XCircle,
@@ -182,39 +181,6 @@ export default function ReservationListPage() {
         </div>
       </Card>
 
-      {/* Quick Links */}
-      <div className="flex flex-wrap gap-2">
-        <Link to={`/admin/events/${eventId}/edit`}>
-          <Button variant="secondary" size="sm">
-            <FileText className="mr-1 h-3.5 w-3.5" />
-            イベント編集
-          </Button>
-        </Link>
-        <Link to={`/admin/events/${eventId}/caution`}>
-          <Button variant="secondary" size="sm">
-            <ClipboardList className="mr-1 h-3.5 w-3.5" />
-            注意事項
-          </Button>
-        </Link>
-        <Link to={`/admin/events/${eventId}/surveys`}>
-          <Button variant="secondary" size="sm">
-            <ClipboardList className="mr-1 h-3.5 w-3.5" />
-            アンケート
-          </Button>
-        </Link>
-        <Link to={`/admin/events/${eventId}/emails`}>
-          <Button variant="secondary" size="sm">
-            <Mail className="mr-1 h-3.5 w-3.5" />
-            一斉メール
-          </Button>
-        </Link>
-        <Link to={`/admin/events/${eventId}/waitlist`}>
-          <Button variant="secondary" size="sm">
-            <Users className="mr-1 h-3.5 w-3.5" />
-            キャンセル待ち管理{waitlistCount > 0 && ` (${waitlistCount}件)`}
-          </Button>
-        </Link>
-      </div>
 
       {/* Waitlist Notification */}
       {waitlistNotification && (

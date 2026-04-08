@@ -1,20 +1,12 @@
 import { useState } from 'react'
-import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Calendar,
-  Users,
-  FileText,
-  BarChart3,
-  Mail,
-  History,
   LogOut,
   Menu,
   X,
   Layers,
-  UserPlus,
-  Bell,
-  Clock,
   UserCircle,
   BarChart2,
 } from 'lucide-react'
@@ -28,38 +20,17 @@ const mainNavItems = [
   { label: 'テンプレート管理', path: '/admin/templates', icon: Layers },
 ]
 
-const eventSubNavItems = [
-  { label: '予約者一覧', path: 'reservations', icon: Users },
-  { label: '注意事項', path: 'caution', icon: FileText },
-  { label: 'アンケート', path: 'survey', icon: FileText },
-  { label: '統計', path: 'stats', icon: BarChart3 },
-  { label: 'キャンセル待ち', path: 'waitlist', icon: UserPlus },
-  { label: 'メール送信', path: 'email', icon: Mail },
-  { label: '配信履歴', path: 'email/history', icon: History },
-  { label: 'リマインド', path: 'reminders', icon: Bell },
-  { label: '時間割', path: 'time-slots', icon: Clock },
-  { label: '開催日', path: 'dates', icon: Calendar },
-]
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { id: eventId } = useParams()
   const { user, signOut } = useAuth()
-
-  // Determine if we're on an event-specific page
-  const isEventPage = location.pathname.match(/^\/admin\/events\/[^/]+/)
 
   const isActive = (path: string) => {
     if (path === '/admin') {
       return location.pathname === '/admin'
     }
     return location.pathname.startsWith(path)
-  }
-
-  const isEventSubActive = (subPath: string) => {
-    if (!eventId) return false
-    return location.pathname === `/admin/events/${eventId}/${subPath}`
   }
 
   const handleSignOut = async () => {
@@ -105,35 +76,6 @@ export default function AdminLayout() {
           })}
         </ul>
 
-        {/* Event sub-navigation */}
-        {isEventPage && eventId && (
-          <div className="mt-6">
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
-              イベント詳細
-            </h3>
-            <ul className="space-y-1">
-              {eventSubNavItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={`/admin/events/${eventId}/${item.path}`}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        isEventSubActive(item.path)
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      {item.label}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
-        )}
       </nav>
 
       {/* User info and logout */}
