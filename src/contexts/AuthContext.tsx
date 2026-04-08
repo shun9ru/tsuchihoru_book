@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { customersApi } from '@/lib/api'
 import type { User } from '@supabase/supabase-js'
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [customer, setCustomer] = useState<Customer | null>(null)
+  const initialized = useRef(false)
 
   const isCustomer = !!customer
 
@@ -34,8 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // public.users にレコードがあれば管理者
-    // customers にレコードがあれば顧客
     try {
       const [adminResult, customerResult] = await Promise.all([
         supabase.from('users').select('id').eq('id', authUser.id).maybeSingle(),
@@ -44,26 +43,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdmin(!!adminResult.data)
       setCustomer(customerResult)
     } catch {
-      // DB クエリ失敗時は未認証扱い
       setIsAdmin(false)
       setCustomer(null)
     }
   }, [])
 
   useEffect(() => {
-    // onAuthStateChange は INITIAL_SESSION イベントで初回セッションも通知するため
-    // getSession() との併用は不要（重複呼び出しを防止）
+    // 1. getSession() で初期セッションを取得
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const authUser = session?.user ?? null
+      setUser(authUser)
+      await resolveRole(authUser)
+      initialized.current = true
+      setLoading(false)
+    }).catch(() => {
+      initialized.current = true
+      setLoading(false)
+    })
+
+    // 2. onAuthStateChange はログイン/ログアウト等の変更のみ処理
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      // 初期化完了前の INITIAL_SESSION は getSession() が処理済みなのでスキップ
+      if (!initialized.current) return
+
+      const authUser = session?.user ?? null
+      setUser(authUser)
       try {
-        const authUser = session?.user ?? null
-        setUser(authUser)
         await resolveRole(authUser)
       } catch {
-        // 接続失敗時は未認証扱い
-      } finally {
-        setLoading(false)
+        // ignore
       }
     })
 
@@ -86,8 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     prefecture?: string
     age_group?: string
   }) => {
-    // Supabase Auth にユーザー作成
-    // メタデータに顧客情報を含め、DB トリガー (handle_new_user) が customers レコードを作成する
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -109,8 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error('アカウント登録に失敗しました')
     }
 
-    // トリガーが作成した顧客レコードを取得
-    // セッションが未確立（メール確認待ち）の場合は null になる
     const newCustomer = await customersApi.getCustomerByAuthId(authData.user.id)
     setCustomer(newCustomer)
   }
