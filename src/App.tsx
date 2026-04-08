@@ -5,12 +5,17 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import PublicLayout from '@/components/layout/PublicLayout'
 import AdminLayout from '@/components/layout/AdminLayout'
 import AdminRoute from '@/components/layout/AdminRoute'
+import CustomerRoute from '@/components/layout/CustomerRoute'
 
 // Public pages
 import EventListPage from '@/pages/public/EventListPage'
 import EventDetailPage from '@/pages/public/EventDetailPage'
 import ReservationPage from '@/pages/public/ReservationPage'
 import ReservationCompletePage from '@/pages/public/ReservationCompletePage'
+import WaitlistPage from '@/pages/public/WaitlistPage'
+import CustomerLoginPage from '@/pages/public/CustomerLoginPage'
+import CustomerRegisterPage from '@/pages/public/CustomerRegisterPage'
+import MyPage from '@/pages/public/MyPage'
 
 // Admin pages
 import LoginPage from '@/pages/admin/LoginPage'
@@ -28,9 +33,8 @@ import ReminderSettingsPage from '@/pages/admin/ReminderSettingsPage'
 import TimeSlotSettingsPage from '@/pages/admin/TimeSlotSettingsPage'
 import EventDatesPage from '@/pages/admin/EventDatesPage'
 import TemplatesPage from '@/pages/admin/TemplatesPage'
-
-// Public (additional)
-import WaitlistPage from '@/pages/public/WaitlistPage'
+import CustomerListPage from '@/pages/admin/CustomerListPage'
+import CustomerDetailPage from '@/pages/admin/CustomerDetailPage'
 
 // 404
 import NotFoundPage from '@/pages/NotFoundPage'
@@ -46,6 +50,17 @@ export default function App() {
           <Route path="/events/:id/reserve" element={<ReservationPage />} />
           <Route path="/events/:id/reserve/complete" element={<ReservationCompletePage />} />
           <Route path="/events/:id/waitlist" element={<WaitlistPage />} />
+        </Route>
+
+        {/* Customer auth (standalone layout) */}
+        <Route path="/login" element={<CustomerLoginPage />} />
+        <Route path="/register" element={<CustomerRegisterPage />} />
+
+        {/* Customer protected routes */}
+        <Route element={<CustomerRoute />}>
+          <Route element={<PublicLayout />}>
+            <Route path="/mypage" element={<MyPage />} />
+          </Route>
         </Route>
 
         {/* Admin login */}
@@ -69,6 +84,8 @@ export default function App() {
             <Route path="/admin/events/:id/time-slots" element={<TimeSlotSettingsPage />} />
             <Route path="/admin/events/:id/dates" element={<EventDatesPage />} />
             <Route path="/admin/templates" element={<TemplatesPage />} />
+            <Route path="/admin/customers" element={<CustomerListPage />} />
+            <Route path="/admin/customers/:id" element={<CustomerDetailPage />} />
           </Route>
         </Route>
 

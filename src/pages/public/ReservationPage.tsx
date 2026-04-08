@@ -2,14 +2,15 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, AlertCircle, Clock, Calendar, ChevronRight, ChevronLeft } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Clock, Calendar, ChevronRight, ChevronLeft, LogIn, UserPlus, User } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { eventsApi, reservationsApi, surveysApi, timeSlotsApi, eventDatesApi } from '@/lib/api'
 import { Button, Card, Input, Textarea, Checkbox, LoadingSpinner } from '@/components/ui'
 import { reservationSchema, type ReservationFormValues } from '@/lib/validations'
 import { cn, isWithinReservationPeriod, getRemainingCapacity, formatDate } from '@/lib/utils'
 import type { Event, EventTimeSlot, EventDate, SurveyQuestion } from '@/types'
 
-type StepId = 'info' | 'caution' | 'survey' | 'confirm'
+type StepId = 'auth' | 'info' | 'caution' | 'survey' | 'confirm'
 
 interface Step {
   id: StepId
@@ -19,6 +20,7 @@ interface Step {
 export default function ReservationPage() {
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { isCustomer, customer } = useAuth()
 
   // Data state
   const [event, setEvent] = useState<Event | null>(null)
@@ -56,6 +58,8 @@ export default function ReservationPage() {
   } = useForm<ReservationFormValues>({
     resolver: zodResolver(reservationSchema),
     defaultValues: {
+      name: customer?.name ?? '',
+      email: customer?.email ?? '',
       participant_count: 1,
     },
   })
@@ -64,12 +68,14 @@ export default function ReservationPage() {
 
   // Dynamic steps based on event data
   const steps = useMemo<Step[]>(() => {
-    const s: Step[] = [{ id: 'info', label: 'お客様情報' }]
+    const s: Step[] = []
+    if (!isCustomer) s.push({ id: 'auth', label: 'ログイン' })
+    s.push({ id: 'info', label: 'お客様情報' })
     if (event?.caution_text) s.push({ id: 'caution', label: '注意事項' })
     if (questions.length > 0) s.push({ id: 'survey', label: 'アンケート' })
     s.push({ id: 'confirm', label: '確認・送信' })
     return s
-  }, [event, questions])
+  }, [event, questions, isCustomer])
 
   const currentStepId = steps[currentStep]?.id ?? 'info'
   const isLastStep = currentStep === steps.length - 1
@@ -294,6 +300,7 @@ export default function ReservationPage() {
         agreed_to_caution: event.caution_text ? agreedToCaution : true,
         caution_version: event.caution_version,
         answers: answers.length > 0 ? answers : undefined,
+        customer_id: isCustomer && customer ? customer.id : undefined,
       }
 
       if (isMultiSelect) {
@@ -433,7 +440,58 @@ export default function ReservationPage() {
         </p>
       </div>
 
-      {/* Step 1: Date/Time + Personal Info */}
+      {/* Step: Auth Choice (guest or login) */}
+      {currentStepId === 'auth' && (
+        <Card>
+          <h2 className="mb-6 text-center text-lg font-semibold text-gray-900">予約方法を選択してください</h2>
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(currentStep + 1)}
+              className="flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 p-5 text-left transition hover:border-blue-400 hover:bg-blue-50"
+            >
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
+                <User className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">ゲストとして予約する</div>
+                <div className="mt-0.5 text-sm text-gray-500">アカウントなしで予約できます</div>
+              </div>
+              <ChevronRight className="ml-auto h-5 w-5 text-gray-400" />
+            </button>
+
+            <a
+              href={`/login?redirect=${encodeURIComponent(`/events/${eventId}/reserve`)}`}
+              className="flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 p-5 text-left transition hover:border-blue-400 hover:bg-blue-50"
+            >
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+                <LogIn className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">ログインして予約する</div>
+                <div className="mt-0.5 text-sm text-gray-500">お名前・メールが自動入力されます</div>
+              </div>
+              <ChevronRight className="ml-auto h-5 w-5 text-gray-400" />
+            </a>
+
+            <a
+              href={`/register?redirect=${encodeURIComponent(`/events/${eventId}/reserve`)}`}
+              className="flex w-full items-center gap-4 rounded-xl border-2 border-gray-200 p-5 text-left transition hover:border-green-400 hover:bg-green-50"
+            >
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100">
+                <UserPlus className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-900">新規登録して予約する</div>
+                <div className="mt-0.5 text-sm text-gray-500">次回から情報入力が不要になります</div>
+              </div>
+              <ChevronRight className="ml-auto h-5 w-5 text-gray-400" />
+            </a>
+          </div>
+        </Card>
+      )}
+
+      {/* Step: Date/Time + Personal Info */}
       {currentStepId === 'info' && (
         <>
           {/* Date & Time Slot Selection */}

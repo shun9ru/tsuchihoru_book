@@ -2,8 +2,8 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
-export default function AdminRoute() {
-  const { isAdmin, loading } = useAuth()
+export default function CustomerRoute() {
+  const { isCustomer, loading } = useAuth()
 
   if (loading) {
     return (
@@ -13,8 +13,8 @@ export default function AdminRoute() {
     )
   }
 
-  if (!isAdmin) {
-    return <Navigate to="/admin/login" replace />
+  if (!isCustomer) {
+    return <Navigate to="/login" replace />
   }
 
   return <Outlet />

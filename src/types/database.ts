@@ -140,6 +140,7 @@ export type Database = {
           caution_version: number | null
           time_slot_id: string | null
           event_date_id: string | null
+          customer_id: string | null
           created_at: string
         }
         Insert: {
@@ -156,6 +157,7 @@ export type Database = {
           caution_version?: number | null
           time_slot_id?: string | null
           event_date_id?: string | null
+          customer_id?: string | null
           created_at?: string
         }
         Update: {
@@ -172,6 +174,7 @@ export type Database = {
           caution_version?: number | null
           time_slot_id?: string | null
           event_date_id?: string | null
+          customer_id?: string | null
           created_at?: string
         }
         Relationships: [
@@ -180,6 +183,13 @@ export type Database = {
             columns: ['event_id']
             isOneToOne: false
             referencedRelation: 'events'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'reservations_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'customers'
             referencedColumns: ['id']
           },
         ]
@@ -623,6 +633,42 @@ export type Database = {
             referencedColumns: ['id']
           },
         ]
+      }
+      customers: {
+        Row: {
+          id: string
+          auth_user_id: string | null
+          name: string
+          email: string
+          prefecture: string | null
+          age_group: string | null
+          memo: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          auth_user_id?: string | null
+          name: string
+          email: string
+          prefecture?: string | null
+          age_group?: string | null
+          memo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          auth_user_id?: string | null
+          name?: string
+          email?: string
+          prefecture?: string | null
+          age_group?: string | null
+          memo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       reminder_jobs: {
         Row: {

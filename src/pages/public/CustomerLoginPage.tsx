@@ -1,38 +1,41 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { LogIn } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button, Card, Input } from '@/components/ui'
-import { loginSchema, type LoginFormValues } from '@/lib/validations'
-import { APP_NAME } from '@/lib/constants'
+import { customerLoginSchema, type CustomerLoginFormValues } from '@/lib/validations'
 
-export default function LoginPage() {
+export default function CustomerLoginPage() {
   const navigate = useNavigate()
-  const { isAdmin, loading: authLoading, signIn } = useAuth()
+  const [searchParams] = useSearchParams()
+  const redirectTo = searchParams.get('redirect') || '/mypage'
+  const { isCustomer, isAdmin, loading: authLoading, signIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<CustomerLoginFormValues>({
+    resolver: zodResolver(customerLoginSchema),
   })
 
   useEffect(() => {
+    if (!authLoading && isCustomer) {
+      navigate(redirectTo, { replace: true })
+    }
     if (!authLoading && isAdmin) {
       navigate('/admin', { replace: true })
     }
-  }, [isAdmin, authLoading, navigate])
+  }, [isCustomer, isAdmin, authLoading, navigate, redirectTo])
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: CustomerLoginFormValues) => {
     setError(null)
     try {
       await signIn(data.email, data.password)
-      navigate('/admin', { replace: true })
-    } catch (err) {
+    } catch {
       setError('メールアドレスまたはパスワードが正しくありません')
     }
   }
@@ -45,8 +48,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">{APP_NAME}</h1>
-          <p className="mt-2 text-sm text-gray-600">管理画面ログイン</p>
+          <h1 className="text-2xl font-bold text-gray-900">ログイン</h1>
+          <p className="mt-2 text-sm text-gray-600">アカウントにログインしてください</p>
         </div>
 
         <Card>
@@ -54,7 +57,7 @@ export default function LoginPage() {
             <Input
               label="メールアドレス"
               type="email"
-              placeholder="admin@example.com"
+              placeholder="example@email.com"
               error={errors.email?.message}
               required
               {...register('email')}
@@ -75,15 +78,18 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              loading={isSubmitting}
-              className="w-full"
-            >
+            <Button type="submit" loading={isSubmitting} className="w-full">
               <LogIn className="mr-2 h-4 w-4" />
               ログイン
             </Button>
           </form>
+
+          <div className="mt-4 text-center text-sm text-gray-600">
+            アカウントをお持ちでない方は
+            <Link to={`/register${redirectTo !== '/mypage' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="ml-1 font-medium text-blue-600 hover:text-blue-500">
+              新規登録
+            </Link>
+          </div>
         </Card>
       </div>
     </div>

@@ -30,6 +30,7 @@ export async function createReservation(data: {
   answers?: Array<{ question_id: string; answer_text?: string; answer_json?: any }>
   time_slot_id?: string
   event_date_id?: string
+  customer_id?: string
 }): Promise<Reservation> {
   // 1. イベントの定員を取得
   const { data: event, error: eventError } = await supabase
@@ -107,6 +108,7 @@ export async function createReservation(data: {
       caution_version: reservationData.caution_version,
       time_slot_id: reservationData.time_slot_id ?? null,
       event_date_id: reservationData.event_date_id ?? null,
+      customer_id: reservationData.customer_id ?? null,
       agreed_at: new Date().toISOString(),
       status: 'confirmed',
     })

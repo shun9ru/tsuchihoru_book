@@ -1,6 +1,10 @@
 import { Link, Outlet } from 'react-router-dom'
+import { LogOut, User } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function PublicLayout() {
+  const { isCustomer, isAdmin, customer, signOut } = useAuth()
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       {/* Header */}
@@ -9,13 +13,45 @@ export default function PublicLayout() {
           <Link to="/" className="text-xl font-bold text-gray-900 hover:text-blue-600 transition-colors">
             イベント予約システム
           </Link>
-          <nav>
+          <nav className="flex items-center gap-4">
             <Link
               to="/"
               className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
             >
               トップ
             </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                管理画面
+              </Link>
+            )}
+            {isCustomer ? (
+              <>
+                <Link
+                  to="/mypage"
+                  className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  {customer?.name ?? 'マイページ'}
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : !isAdmin ? (
+              <Link
+                to="/login"
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                ログイン
+              </Link>
+            ) : null}
           </nav>
         </div>
       </header>

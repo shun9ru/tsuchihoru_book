@@ -59,6 +59,10 @@ export type EventDate = Database['public']['Tables']['event_dates']['Row']
 export type EventDateInsert = Database['public']['Tables']['event_dates']['Insert']
 export type EventDateUpdate = Database['public']['Tables']['event_dates']['Update']
 
+export type Customer = Database['public']['Tables']['customers']['Row']
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
+
 export const SLOT_INTERVAL_OPTIONS = [
   { value: 15, label: '15分' },
   { value: 30, label: '30分' },
@@ -74,6 +78,7 @@ export type QuestionType = 'single_choice' | 'multiple_choice' | 'free_text'
 export type EmailStatus = 'draft' | 'sending' | 'sent' | 'failed'
 export type SendStatus = 'pending' | 'sent' | 'failed'
 export type UserRole = 'admin' | 'editor' | 'viewer'
+export type AgeGroup = '未就学児' | '小学生' | '中学生' | '高校生' | '20代' | '30代' | '40代' | '50代' | '60代' | '70代以上'
 export type WaitlistStatus = 'waiting' | 'promoted' | 'cancelled'
 export type ReminderType = '3_days_before' | '1_day_before' | 'morning_of'
 export type ReminderStatus = 'pending' | 'sent' | 'failed' | 'skipped'

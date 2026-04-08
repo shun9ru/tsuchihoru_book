@@ -18,6 +18,30 @@ export async function signIn(
   return data.user
 }
 
+/** 顧客アカウント登録 */
+export async function signUp(
+  email: string,
+  password: string,
+): Promise<User> {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { role: 'customer' },
+    },
+  })
+
+  if (error) {
+    throw new Error(`アカウント登録に失敗しました: ${error.message}`)
+  }
+
+  if (!data.user) {
+    throw new Error('アカウント登録に失敗しました')
+  }
+
+  return data.user
+}
+
 /** ログアウト */
 export async function signOut(): Promise<void> {
   const { error } = await supabase.auth.signOut()

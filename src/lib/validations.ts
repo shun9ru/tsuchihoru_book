@@ -114,6 +114,59 @@ export const bulkEmailSchema = z.object({
 
 export type BulkEmailFormValues = z.infer<typeof bulkEmailSchema>
 
+export const customerRegisterSchema = z.object({
+  name: z
+    .string()
+    .min(1, '氏名は必須です'),
+  email: z
+    .string()
+    .min(1, 'メールアドレスは必須です')
+    .email('有効なメールアドレスを入力してください'),
+  password: z
+    .string()
+    .min(6, 'パスワードは6文字以上で入力してください'),
+  confirmPassword: z
+    .string()
+    .min(1, 'パスワード確認は必須です'),
+  prefecture: z
+    .string()
+    .optional(),
+  age_group: z
+    .string()
+    .optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'パスワードが一致しません',
+  path: ['confirmPassword'],
+})
+
+export type CustomerRegisterFormValues = z.infer<typeof customerRegisterSchema>
+
+export const customerProfileSchema = z.object({
+  name: z
+    .string()
+    .min(1, '氏名は必須です'),
+  prefecture: z
+    .string()
+    .optional(),
+  age_group: z
+    .string()
+    .optional(),
+})
+
+export type CustomerProfileFormValues = z.infer<typeof customerProfileSchema>
+
+export const customerLoginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'メールアドレスは必須です')
+    .email('有効なメールアドレスを入力してください'),
+  password: z
+    .string()
+    .min(6, 'パスワードは6文字以上で入力してください'),
+})
+
+export type CustomerLoginFormValues = z.infer<typeof customerLoginSchema>
+
 export const loginSchema = z.object({
   email: z
     .string()
