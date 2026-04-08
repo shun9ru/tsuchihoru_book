@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(authUser)
       await resolveRole(authUser)
       setLoading(false)
+    }).catch(() => {
+      setLoading(false)
     })
 
     // Listen for auth state changes
