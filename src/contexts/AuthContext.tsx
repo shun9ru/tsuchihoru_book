@@ -51,24 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // Get current session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      const authUser = session?.user ?? null
-      setUser(authUser)
-      await resolveRole(authUser)
-      setLoading(false)
-    }).catch(() => {
-      setLoading(false)
-    })
-
-    // Listen for auth state changes
+    // onAuthStateChange は INITIAL_SESSION イベントで初回セッションも通知するため
+    // getSession() との併用は不要（重複呼び出しを防止）
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const authUser = session?.user ?? null
-      setUser(authUser)
-      await resolveRole(authUser)
-      setLoading(false)
+      try {
+        const authUser = session?.user ?? null
+        setUser(authUser)
+        await resolveRole(authUser)
+      } catch {
+        // 接続失敗時は未認証扱い
+      } finally {
+        setLoading(false)
+      }
     })
 
     return () => {
