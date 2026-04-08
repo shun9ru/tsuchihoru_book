@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Users, Search } from 'lucide-react'
 import { customersApi } from '@/lib/api'
-import { Button, Card, Badge, LoadingSpinner, EmptyState, Input, Select } from '@/components/ui'
+import { Button, Card, Badge, LoadingSpinner, EmptyState, Select } from '@/components/ui'
 import { AGE_GROUP_OPTIONS, PREFECTURE_OPTIONS } from '@/lib/constants'
 import { formatDate } from '@/lib/utils'
 import type { Customer } from '@/types'
@@ -101,7 +101,7 @@ export default function CustomerListPage() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<Users className="h-12 w-12" />}
+          icon={Users}
           title="顧客が見つかりません"
           description={customers.length === 0
             ? '顧客がアカウント登録するとここに表示されます。'
