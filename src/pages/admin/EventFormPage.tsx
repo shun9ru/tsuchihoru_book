@@ -111,6 +111,9 @@ export default function EventFormPage() {
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
+      event_date: '',
+      start_time: '',
+      end_time: '',
       fee: 0,
       is_published: false,
       is_accepting: false,
@@ -147,6 +150,16 @@ export default function EventFormPage() {
   useEffect(() => {
     setValue('capacity', totalCapacity)
   }, [totalCapacity, setValue])
+
+  // dateEntries の変更を react-hook-form に同期
+  useEffect(() => {
+    const first = [...dateEntries].sort((a, b) => a.event_date.localeCompare(b.event_date))[0]
+    if (first) {
+      setValue('event_date', first.event_date, { shouldValidate: true })
+      setValue('start_time', first.start_time, { shouldValidate: true })
+      setValue('end_time', first.end_time || '', { shouldValidate: true })
+    }
+  }, [dateEntries, setValue])
 
   async function loadEvent(eventId: string) {
     try {
@@ -697,10 +710,7 @@ export default function EventFormPage() {
             })}
           </div>
 
-          {/* hidden fields for form validation */}
-          <input type="hidden" {...register('event_date')} value={dateEntries[0]?.event_date || ''} />
-          <input type="hidden" {...register('start_time')} value={dateEntries[0]?.start_time || '10:00'} />
-          <input type="hidden" {...register('end_time')} value={dateEntries[0]?.end_time || '12:00'} />
+          {/* event_date / start_time / end_time は useEffect で setValue 同期済み */}
         </Card>
 
         {/* Additional Info */}
