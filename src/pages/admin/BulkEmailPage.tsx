@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import EventTabs from '@/components/admin/EventTabs'
 import { Send, Mail, Eye, FlaskConical, History, CheckCircle, FileText, BookmarkPlus } from 'lucide-react'
 import { emailsApi, reservationsApi, eventsApi, templatesApi } from '@/lib/api'
 import { Button, Card, Input, Textarea, LoadingSpinner, Modal, ConfirmDialog } from '@/components/ui'
@@ -254,6 +255,7 @@ export default function BulkEmailPage() {
           </Button>
         </Link>
       </div>
+      <div className="mb-6"><EventTabs /></div>
 
       {/* Target count */}
       <Card className="mb-6">

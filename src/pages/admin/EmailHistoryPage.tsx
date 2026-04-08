@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import EventTabs from '@/components/admin/EventTabs'
 import { Mail, ChevronDown, ChevronUp, ArrowLeft, MailPlus } from 'lucide-react'
 import { emailsApi, eventsApi } from '@/lib/api'
 import { Button, Card, Badge, LoadingSpinner, Modal, EmptyState } from '@/components/ui'
@@ -152,6 +153,7 @@ export default function EmailHistoryPage() {
           </Button>
         </Link>
       </div>
+      <div className="mb-6"><EventTabs /></div>
 
       {/* Email list */}
       {emails.length === 0 ? (

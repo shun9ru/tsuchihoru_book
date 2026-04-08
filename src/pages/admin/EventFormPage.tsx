@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { eventSchema, type EventFormValues } from '@/lib/validations'
 import { formatDate } from '@/lib/utils'
+import EventTabs from '@/components/admin/EventTabs'
 import SaveStatus from '@/components/ui/SaveStatus'
 import { useAutoSave } from '@/lib/useAutoSave'
 import { SLOT_INTERVAL_OPTIONS } from '@/lib/constants'
@@ -500,6 +501,9 @@ export default function EventFormPage() {
         </h1>
         {isEditing && <SaveStatus status={autoSaveStatus} />}
       </div>
+
+      {/* Event Tabs */}
+      <EventTabs />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}
