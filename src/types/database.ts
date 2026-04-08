@@ -717,6 +717,42 @@ export type Database = {
           },
         ]
       }
+      page_views: {
+        Row: {
+          id: string
+          path: string
+          referrer: string | null
+          referrer_source: string | null
+          utm_source: string | null
+          utm_medium: string | null
+          utm_campaign: string | null
+          user_agent: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          path: string
+          referrer?: string | null
+          referrer_source?: string | null
+          utm_source?: string | null
+          utm_medium?: string | null
+          utm_campaign?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          path?: string
+          referrer?: string | null
+          referrer_source?: string | null
+          utm_source?: string | null
+          utm_medium?: string | null
+          utm_campaign?: string | null
+          user_agent?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

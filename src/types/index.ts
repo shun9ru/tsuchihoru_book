@@ -59,6 +59,9 @@ export type EventDate = Database['public']['Tables']['event_dates']['Row']
 export type EventDateInsert = Database['public']['Tables']['event_dates']['Insert']
 export type EventDateUpdate = Database['public']['Tables']['event_dates']['Update']
 
+export type PageView = Database['public']['Tables']['page_views']['Row']
+export type PageViewInsert = Database['public']['Tables']['page_views']['Insert']
+
 export type Customer = Database['public']['Tables']['customers']['Row']
 export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
 export type CustomerUpdate = Database['public']['Tables']['customers']['Update']

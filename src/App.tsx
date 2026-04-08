@@ -36,12 +36,24 @@ import TemplatesPage from '@/pages/admin/TemplatesPage'
 import CustomerListPage from '@/pages/admin/CustomerListPage'
 import CustomerDetailPage from '@/pages/admin/CustomerDetailPage'
 
+// Analytics
+import AnalyticsPage from '@/pages/admin/AnalyticsPage'
+
+// Page tracking
+import { usePageTracking } from '@/lib/usePageTracking'
+
 // 404
 import NotFoundPage from '@/pages/NotFoundPage'
+
+function PageTracker() {
+  usePageTracking()
+  return null
+}
 
 export default function App() {
   return (
     <AuthProvider>
+      <PageTracker />
       <Routes>
         {/* Public routes */}
         <Route element={<PublicLayout />}>
@@ -86,6 +98,7 @@ export default function App() {
             <Route path="/admin/templates" element={<TemplatesPage />} />
             <Route path="/admin/customers" element={<CustomerListPage />} />
             <Route path="/admin/customers/:id" element={<CustomerDetailPage />} />
+            <Route path="/admin/analytics" element={<AnalyticsPage />} />
           </Route>
         </Route>
 

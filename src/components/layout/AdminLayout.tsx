@@ -16,6 +16,7 @@ import {
   Bell,
   Clock,
   UserCircle,
+  BarChart2,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -23,6 +24,7 @@ const mainNavItems = [
   { label: 'ダッシュボード', path: '/admin', icon: LayoutDashboard },
   { label: 'イベント管理', path: '/admin/events', icon: Calendar },
   { label: '顧客管理', path: '/admin/customers', icon: UserCircle },
+  { label: 'アクセス解析', path: '/admin/analytics', icon: BarChart2 },
   { label: 'テンプレート管理', path: '/admin/templates', icon: Layers },
 ]
 

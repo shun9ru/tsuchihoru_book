@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, Users, Ticket, Plus, ArrowRight } from 'lucide-react'
-import { eventsApi, reservationsApi } from '@/lib/api'
+import { CalendarDays, Users, Ticket, Plus, ArrowRight, Eye, TrendingUp } from 'lucide-react'
+import { eventsApi, reservationsApi, analyticsApi } from '@/lib/api'
 import { Button, Card, LoadingSpinner } from '@/components/ui'
 import { formatDate, formatTime } from '@/lib/utils'
 import type { Event } from '@/types'
@@ -10,6 +10,8 @@ interface DashboardStats {
   totalEvents: number
   upcomingEvents: number
   totalConfirmedReservations: number
+  todayPV: number
+  weekPV: number
 }
 
 interface UpcomingEventWithCount {
@@ -45,7 +47,7 @@ export default function DashboardPage() {
         })
       )
 
-      // Calculate total confirmed reservations across all events
+      // Calculate total confirmed reservations + PV stats
       let totalConfirmed = 0
       await Promise.all(
         events.map(async (event) => {
@@ -54,10 +56,17 @@ export default function DashboardPage() {
         })
       )
 
+      const [todayPV, weekPV] = await Promise.all([
+        analyticsApi.getTodayPageViews().catch(() => 0),
+        analyticsApi.getTotalPageViews(7).catch(() => 0),
+      ])
+
       setStats({
         totalEvents: events.length,
         upcomingEvents: upcoming.length,
         totalConfirmedReservations: totalConfirmed,
+        todayPV,
+        weekPV,
       })
       setUpcomingEvents(upcomingWithCounts)
     } catch (err) {
@@ -92,7 +101,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <Card>
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
@@ -128,6 +137,32 @@ export default function DashboardPage() {
             </div>
           </div>
         </Card>
+
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
+              <Eye className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">本日のPV</p>
+              <p className="text-2xl font-bold text-gray-900">{stats?.todayPV ?? 0}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Link to="/admin/analytics">
+          <Card className="h-full transition hover:border-blue-300">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-100">
+                <TrendingUp className="h-6 w-6 text-cyan-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">直近7日PV</p>
+                <p className="text-2xl font-bold text-gray-900">{stats?.weekPV ?? 0}</p>
+              </div>
+            </div>
+          </Card>
+        </Link>
       </div>
 
       {/* Upcoming Events */}
