@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import EventTabs from '@/components/admin/EventTabs'
 import {
   ArrowLeft,
   Users,
@@ -129,7 +128,6 @@ export default function WaitlistManagePage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">キャンセル待ち管理</h1>
       </div>
-      <EventTabs />
 
       {/* Event Summary */}
       <Card>

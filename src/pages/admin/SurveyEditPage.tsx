@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import EventTabs from '@/components/admin/EventTabs'
 import {
   Plus,
   Pencil,
@@ -423,7 +422,6 @@ export default function SurveyEditPage() {
           </div>
         </div>
       </div>
-      <div className="mb-6"><EventTabs /></div>
 
       {/* Error */}
       {error && (

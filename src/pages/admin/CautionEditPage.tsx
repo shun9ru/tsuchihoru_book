@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import EventTabs from '@/components/admin/EventTabs'
 import { Eye, AlertTriangle, Info, FileText, BookmarkPlus } from 'lucide-react'
 import { eventsApi, templatesApi } from '@/lib/api'
 import { Button, Card, Input, Textarea, LoadingSpinner, Modal } from '@/components/ui'
@@ -137,7 +136,6 @@ export default function CautionEditPage() {
         </div>
         <p className="mt-1 text-sm text-gray-500">{event.title}</p>
       </div>
-      <div className="mb-6"><EventTabs /></div>
 
       {/* Status Messages */}
       {error && (

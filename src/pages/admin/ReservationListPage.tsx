@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import EventTabs from '@/components/admin/EventTabs'
 import {
   ArrowLeft,
   Users,
@@ -154,7 +153,6 @@ export default function ReservationListPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">予約一覧</h1>
       </div>
-      <EventTabs />
 
       {/* Event Summary */}
       <Card>
