@@ -59,8 +59,16 @@ export type EventDate = Database['public']['Tables']['event_dates']['Row']
 export type EventDateInsert = Database['public']['Tables']['event_dates']['Insert']
 export type EventDateUpdate = Database['public']['Tables']['event_dates']['Update']
 
+export type CustomerActivity = Database['public']['Tables']['customer_activities']['Row']
+export type CustomerActivityInsert = Database['public']['Tables']['customer_activities']['Insert']
+export type CustomerActivityUpdate = Database['public']['Tables']['customer_activities']['Update']
+
 export type PageView = Database['public']['Tables']['page_views']['Row']
 export type PageViewInsert = Database['public']['Tables']['page_views']['Insert']
+
+export type EventExpense = Database['public']['Tables']['event_expenses']['Row']
+export type EventExpenseInsert = Database['public']['Tables']['event_expenses']['Insert']
+export type EventExpenseUpdate = Database['public']['Tables']['event_expenses']['Update']
 
 export type Customer = Database['public']['Tables']['customers']['Row']
 export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
@@ -76,7 +84,7 @@ export const SLOT_INTERVAL_OPTIONS = [
 ] as const
 
 // App-level types
-export type ReservationStatus = 'confirmed' | 'cancelled' | 'attended' | 'no_show'
+export type ReservationStatus = 'pending_approval' | 'confirmed' | 'rejected' | 'cancelled' | 'attended' | 'no_show'
 export type QuestionType = 'single_choice' | 'multiple_choice' | 'free_text'
 export type EmailStatus = 'draft' | 'sending' | 'sent' | 'failed'
 export type SendStatus = 'pending' | 'sent' | 'failed'

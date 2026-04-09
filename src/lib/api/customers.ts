@@ -45,6 +45,21 @@ export async function getCustomerByAuthId(authUserId: string): Promise<Customer 
   return data
 }
 
+/** メールアドレスで顧客取得 */
+export async function getCustomerByEmail(email: string): Promise<Customer | null> {
+  const { data, error } = await supabase
+    .from('customers')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`顧客情報の取得に失敗しました: ${error.message}`)
+  }
+
+  return data
+}
+
 /** 顧客作成 */
 export async function createCustomer(data: CustomerInsert): Promise<Customer> {
   const { data: customer, error } = await supabase

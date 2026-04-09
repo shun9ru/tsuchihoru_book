@@ -1,12 +1,14 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { Users, FileText, BarChart3, Mail, UserPlus, Pencil } from 'lucide-react'
+import { Users, FileText, BarChart3, Mail, UserPlus, Pencil, Clock, DollarSign } from 'lucide-react'
 
 const tabs = [
   { label: '基本情報', path: 'edit', icon: Pencil },
   { label: '予約者一覧', path: 'reservations', icon: Users },
+  { label: '予約状況', path: 'timeline', icon: Clock },
   { label: '注意事項', path: 'caution', icon: FileText },
   { label: 'アンケート', path: 'survey', icon: FileText },
   { label: '統計', path: 'stats', icon: BarChart3 },
+  { label: '収支', path: 'revenue', icon: DollarSign },
   { label: 'メール', path: 'email', icon: Mail },
   { label: 'キャンセル待ち', path: 'waitlist', icon: UserPlus },
 ]

@@ -2,9 +2,9 @@ import { supabase } from '@/lib/supabase'
 import type { Reservation } from '@/types'
 import { getConfirmedParticipantCount } from './events'
 
-/** イベントの予約一覧取得（管理者用） */
-export async function getReservations(eventId: string): Promise<Reservation[]> {
-  const { data, error } = await supabase
+/** イベントの予約一覧取得（管理者用・時間帯情報付き） */
+export async function getReservations(eventId: string) {
+  const { data: reservations, error } = await supabase
     .from('reservations')
     .select('*')
     .eq('event_id', eventId)
@@ -14,8 +14,41 @@ export async function getReservations(eventId: string): Promise<Reservation[]> {
     throw new Error(`予約一覧の取得に失敗しました: ${error.message}`)
   }
 
-  return data
+  // タイムスロットと日程の情報を別途取得してマージ
+  const slotIds = [...new Set(reservations.filter(r => r.time_slot_id).map(r => r.time_slot_id!))]
+  const dateIds = [...new Set(reservations.filter(r => r.event_date_id).map(r => r.event_date_id!))]
+
+  let slotsMap: Record<string, { start_time: string; end_time: string }> = {}
+  let datesMap: Record<string, { event_date: string; start_time: string; end_time: string | null }> = {}
+
+  if (slotIds.length > 0) {
+    const { data: slots } = await supabase
+      .from('event_time_slots')
+      .select('id, start_time, end_time')
+      .in('id', slotIds)
+    if (slots) {
+      slotsMap = Object.fromEntries(slots.map(s => [s.id, { start_time: s.start_time, end_time: s.end_time }]))
+    }
+  }
+
+  if (dateIds.length > 0) {
+    const { data: dates } = await supabase
+      .from('event_dates')
+      .select('id, event_date, start_time, end_time')
+      .in('id', dateIds)
+    if (dates) {
+      datesMap = Object.fromEntries(dates.map(d => [d.id, { event_date: d.event_date, start_time: d.start_time, end_time: d.end_time }]))
+    }
+  }
+
+  return reservations.map(r => ({
+    ...r,
+    event_time_slots: r.time_slot_id ? slotsMap[r.time_slot_id] || null : null,
+    event_dates: r.event_date_id ? datesMap[r.event_date_id] || null : null,
+  }))
 }
+
+export type ReservationWithSlot = Awaited<ReturnType<typeof getReservations>>[number]
 
 /** 予約作成（定員チェック含む） */
 export async function createReservation(data: {
@@ -110,7 +143,7 @@ export async function createReservation(data: {
       event_date_id: reservationData.event_date_id ?? null,
       customer_id: reservationData.customer_id ?? null,
       agreed_at: new Date().toISOString(),
-      status: 'confirmed',
+      status: 'pending_approval',
     })
     .select()
     .single()
@@ -138,10 +171,43 @@ export async function createReservation(data: {
     }
   }
 
+  // 管理者へ新規予約通知メールを送信（非ブロッキング：予約完了を待たせない）
+  ;(async () => {
+    try {
+      const { data: eventInfo } = await supabase
+        .from('events')
+        .select('title, event_date')
+        .eq('id', data.event_id)
+        .single()
+
+      const { data: admins } = await supabase
+        .from('users')
+        .select('email')
+        .eq('role', 'admin')
+
+      if (admins && admins.length > 0) {
+        await Promise.allSettled(
+          admins.map(admin =>
+            supabase.functions.invoke('send-email', {
+              body: {
+                type: 'single',
+                to: admin.email,
+                subject: `【新規予約】${eventInfo?.title || ''} - ${data.name}様`,
+                body: `新しい予約が入りました。承認をお願いします。\n\nイベント: ${eventInfo?.title || ''}\n予約者: ${data.name}\nメール: ${data.email}\n電話: ${data.phone}\n参加人数: ${data.participant_count}名\n\n管理画面から承認・却下を行ってください。`,
+              },
+            })
+          )
+        )
+      }
+    } catch (e) {
+      console.error('管理者通知メールの送信に失敗:', e)
+    }
+  })()
+
   return reservation
 }
 
-/** 予約ステータス更新 */
+/** 予約ステータス更新（承認/却下時にメール通知付き） */
 export async function updateReservationStatus(
   id: string,
   status: string
@@ -155,6 +221,33 @@ export async function updateReservationStatus(
 
   if (error) {
     throw new Error(`予約ステータスの更新に失敗しました: ${error.message}`)
+  }
+
+  // 承認/却下時に予約者へメール通知（非ブロッキング）
+  if (status === 'confirmed' || status === 'rejected') {
+    ;(async () => {
+      try {
+        const { data: eventInfo } = await supabase
+          .from('events')
+          .select('title, event_date, start_time, end_time, location')
+          .eq('id', data.event_id)
+          .single()
+
+        const subject = status === 'confirmed'
+          ? `【予約確定】${eventInfo?.title || ''}`
+          : `【予約についてのお知らせ】${eventInfo?.title || ''}`
+
+        const body = status === 'confirmed'
+          ? `${data.name}様\n\nご予約が確定しました。\n\nイベント: ${eventInfo?.title || ''}\n日時: ${eventInfo?.event_date || ''} ${eventInfo?.start_time || ''}〜${eventInfo?.end_time || ''}\n場所: ${eventInfo?.location || ''}\n参加人数: ${data.participant_count}名\n\nご参加をお待ちしております。`
+          : `${data.name}様\n\n誠に申し訳ございませんが、以下のご予約を承認できませんでした。\n\nイベント: ${eventInfo?.title || ''}\n日時: ${eventInfo?.event_date || ''}\n\nご不明な点がございましたらお気軽にお問い合わせください。`
+
+        await supabase.functions.invoke('send-email', {
+          body: { type: 'single', to: data.email, subject, body },
+        })
+      } catch (e) {
+        console.error('予約者への通知メール送信に失敗:', e)
+      }
+    })()
   }
 
   return data
@@ -173,6 +266,35 @@ export async function getReservation(id: string): Promise<Reservation> {
   }
 
   return data
+}
+
+/** 予約に紐づくアンケート回答取得（質問情報付き） */
+export async function getReservationSurveyAnswers(reservationId: string) {
+  const { data, error } = await supabase
+    .from('survey_answers')
+    .select('*, survey_questions(question_text, question_type, options_json)')
+    .eq('reservation_id', reservationId)
+
+  if (error) {
+    throw new Error(`アンケート回答の取得に失敗しました: ${error.message}`)
+  }
+
+  return data
+}
+
+/** メールアドレスで通算参加回数を取得（confirmed + attended） */
+export async function getParticipationCount(email: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('reservations')
+    .select('*', { count: 'exact', head: true })
+    .eq('email', email)
+    .in('status', ['confirmed', 'attended'])
+
+  if (error) {
+    throw new Error(`参加回数の取得に失敗しました: ${error.message}`)
+  }
+
+  return count ?? 0
 }
 
 /** 予約のメールアドレス一覧取得（一斉メール用） */

@@ -33,8 +33,10 @@ import ReminderSettingsPage from '@/pages/admin/ReminderSettingsPage'
 import TimeSlotSettingsPage from '@/pages/admin/TimeSlotSettingsPage'
 import EventDatesPage from '@/pages/admin/EventDatesPage'
 import TemplatesPage from '@/pages/admin/TemplatesPage'
+import ReservationTimelinePage from '@/pages/admin/ReservationTimelinePage'
 import CustomerListPage from '@/pages/admin/CustomerListPage'
 import CustomerDetailPage from '@/pages/admin/CustomerDetailPage'
+import RevenuePage from '@/pages/admin/RevenuePage'
 
 // Analytics
 import AnalyticsPage from '@/pages/admin/AnalyticsPage'
@@ -86,9 +88,11 @@ export default function App() {
             <Route path="/admin/events/new" element={<EventFormPage />} />
             <Route path="/admin/events/:id/edit" element={<EventFormPage />} />
             <Route path="/admin/events/:id/reservations" element={<ReservationListPage />} />
+            <Route path="/admin/events/:id/timeline" element={<ReservationTimelinePage />} />
             <Route path="/admin/events/:id/caution" element={<CautionEditPage />} />
             <Route path="/admin/events/:id/survey" element={<SurveyEditPage />} />
             <Route path="/admin/events/:id/stats" element={<StatsPage />} />
+            <Route path="/admin/events/:id/revenue" element={<RevenuePage />} />
             <Route path="/admin/events/:id/email" element={<BulkEmailPage />} />
             <Route path="/admin/events/:id/email/history" element={<EmailHistoryPage />} />
             <Route path="/admin/events/:id/waitlist" element={<WaitlistManagePage />} />

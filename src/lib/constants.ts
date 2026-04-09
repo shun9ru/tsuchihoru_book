@@ -1,7 +1,9 @@
 export const APP_NAME = 'イベント予約管理システム'
 
 export const RESERVATION_STATUS_LABELS: Record<string, string> = {
+  pending_approval: '承認待ち',
   confirmed: '予約確定',
+  rejected: '却下',
   cancelled: 'キャンセル',
   attended: '参加済',
   no_show: '無断欠席',

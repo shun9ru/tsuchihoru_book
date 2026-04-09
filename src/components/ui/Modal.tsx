@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-type ModalSize = 'sm' | 'md' | 'lg'
+type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
 interface ModalProps {
   isOpen: boolean
@@ -19,6 +19,7 @@ const sizeStyles: Record<ModalSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-lg',
+  xl: 'max-w-2xl',
 }
 
 export function Modal({
@@ -78,7 +79,7 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="px-6 py-4">{children}</div>
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-4">{children}</div>
       </div>
     </div>,
     document.body

@@ -717,6 +717,57 @@ export type Database = {
           },
         ]
       }
+      customer_activities: {
+        Row: {
+          id: string
+          customer_id: string
+          activity_date: string
+          title: string
+          plan: string | null
+          memo: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          customer_id: string
+          activity_date: string
+          title: string
+          plan?: string | null
+          memo?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          customer_id?: string
+          activity_date?: string
+          title?: string
+          plan?: string | null
+          memo?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'customer_activities_customer_id_fkey'
+            columns: ['customer_id']
+            isOneToOne: false
+            referencedRelation: 'customers'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'customer_activities_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       page_views: {
         Row: {
           id: string
@@ -752,6 +803,44 @@ export type Database = {
           created_at?: string
         }
         Relationships: []
+      }
+      event_expenses: {
+        Row: {
+          id: string
+          event_id: string
+          name: string
+          amount: number
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          name: string
+          amount?: number
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          name?: string
+          amount?: number
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'event_expenses_event_id_fkey'
+            columns: ['event_id']
+            isOneToOne: false
+            referencedRelation: 'events'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {

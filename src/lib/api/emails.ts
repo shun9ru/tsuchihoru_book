@@ -61,8 +61,52 @@ export async function sendBulkEmail(emailId: string): Promise<BulkEmail> {
     }
   }
 
-  // 5. ステータスを'sent'に更新（実際のメール送信はEdge Functionで行う想定）
-  // TODO: Supabase Edge Functionを呼び出して実際にメールを送信する
+  // 5. Edge Functionを呼び出して実際にメールを送信
+  const { data: event } = await supabase
+    .from('events')
+    .select('title, event_date')
+    .eq('id', bulkEmail.event_id)
+    .single()
+
+  const { data: result, error: invokeError } = await supabase.functions.invoke('send-email', {
+    body: {
+      type: 'bulk',
+      recipients: recipients.map((r) => ({
+        email: r.email,
+        name: r.name,
+        reservation_id: r.id,
+      })),
+      subject: bulkEmail.subject,
+      body: bulkEmail.body,
+      bulk_email_id: emailId,
+      event_title: event?.title || '',
+      event_date: event?.event_date || '',
+    },
+  })
+
+  if (invokeError) {
+    await supabase
+      .from('bulk_emails')
+      .update({ status: 'failed' })
+      .eq('id', emailId)
+    throw new Error(`メール送信に失敗しました: ${invokeError.message}`)
+  }
+
+  // 6. 送信結果でログを更新
+  if (result?.results) {
+    for (const r of result.results) {
+      await supabase
+        .from('bulk_email_logs')
+        .update({
+          send_status: r.success ? 'sent' : 'failed',
+          error_message: r.error || null,
+        })
+        .eq('bulk_email_id', emailId)
+        .eq('email', r.email)
+    }
+  }
+
+  // 7. ステータスを'sent'に更新
   const { data: updatedEmail, error: updateError } = await supabase
     .from('bulk_emails')
     .update({
@@ -111,19 +155,17 @@ export async function getBulkEmailLogs(emailId: string): Promise<BulkEmailLog[]>
   return data
 }
 
-/** テスト送信（Supabase Edge Functionを呼ぶ想定、ここではモック） */
+/** テスト送信 */
 export async function sendTestEmail(
   to: string,
   subject: string,
   body: string
 ): Promise<void> {
-  // TODO: 実際のEdge Function呼び出しに置き換える
-  // const { error } = await supabase.functions.invoke('send-email', {
-  //   body: { to, subject, body },
-  // })
+  const { error } = await supabase.functions.invoke('send-email', {
+    body: { type: 'single', to, subject, body },
+  })
 
-  console.log('テストメール送信（モック）:', { to, subject, body })
-
-  // モックでは常に成功とする
-  return Promise.resolve()
+  if (error) {
+    throw new Error(`テストメール送信に失敗しました: ${error.message}`)
+  }
 }

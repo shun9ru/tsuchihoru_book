@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowLeft, AlertCircle, Clock, Calendar, ChevronRight, ChevronLeft, LogIn, UserPlus, User } from 'lucide-react'
+import TimelineSlotPicker from '@/components/public/TimelineSlotPicker'
 import { useAuth } from '@/contexts/AuthContext'
 import { eventsApi, reservationsApi, surveysApi, timeSlotsApi, eventDatesApi } from '@/lib/api'
 import { Button, Card, Input, Textarea, Checkbox, LoadingSpinner } from '@/components/ui'
@@ -99,11 +100,20 @@ export default function ReservationPage() {
             eventDatesApi.getEventDates(eventData.id),
             eventDatesApi.getDateReservationCounts(eventData.id),
           ])
-          setEventDates(dates.filter(d => d.is_available).map(d => ({
+          const availableDates = dates.filter(d => d.is_available).map(d => ({
             ...d,
             reserved_count: dateCounts[d.id] || 0,
             remaining: d.capacity - (dateCounts[d.id] || 0),
-          })))
+          }))
+          setEventDates(availableDates)
+
+          // 日程+タイムスロット: 最初の日程のスロットを自動ロード
+          if (eventData.use_time_slots && availableDates.length > 0) {
+            const firstDateId = availableDates[0].id
+            setSelectedDateId(firstDateId)
+            const slots = await timeSlotsApi.getAvailableSlots(eventData.id, firstDateId)
+            setTimeSlots(slots)
+          }
         }
 
         if (eventData.use_time_slots && !eventData.use_multi_dates) {
@@ -494,123 +504,151 @@ export default function ReservationPage() {
       {/* Step: Date/Time + Personal Info */}
       {currentStepId === 'info' && (
         <>
-          {/* Date & Time Slot Selection */}
-          {event.use_multi_dates && (
+          {/* Date + Time Slot: 日程をタブ、時間帯を直接表示 */}
+          {event.use_multi_dates && event.use_time_slots && (
             <Card className="mb-6">
               <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-                <Calendar className="h-5 w-5" />
-                {event.use_time_slots ? '日程と時間帯を選択してください' : '参加する日程を選択してください'}
+                <Clock className="h-5 w-5" />
+                希望する時間帯を選択してください
               </h2>
               {isMultiSelect && (
                 <p className="mb-3 text-xs text-blue-600">複数選択できます</p>
               )}
               {dateError && <p className="mb-3 text-sm text-red-600">{dateError}</p>}
               {slotError && <p className="mb-3 text-sm text-red-600">{slotError}</p>}
+
+              {/* 日程タブ（複数日程の場合のみ表示） */}
+              {eventDates.length > 1 && (
+                <div className="mb-4 flex gap-2 overflow-x-auto">
+                  {eventDates.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => {
+                        setDateError('')
+                        setSlotError('')
+                        if (isMultiSelect) {
+                          setSelectedDateIds(prev =>
+                            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+                          )
+                        }
+                        setSelectedDateId(d.id)
+                        setSelectedSlotId('')
+                      }}
+                      className={cn(
+                        'whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                        selectedDateId === d.id
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      )}
+                    >
+                      {formatDate(d.event_date)}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* 選択中の日程ラベル */}
+              {(() => {
+                const current = eventDates.find(d => d.id === selectedDateId)
+                if (!current) return null
+                return (
+                  <p className="mb-3 text-sm text-gray-600">
+                    {formatDate(current.event_date)}
+                    {' '}
+                    {current.start_time.slice(0, 5)}{current.end_time ? ` 〜 ${current.end_time.slice(0, 5)}` : ''}
+                  </p>
+                )
+              })()}
+
+              {/* タイムライン */}
+              {timeSlots.length > 0 ? (
+                <TimelineSlotPicker
+                  slots={timeSlots}
+                  selectedSlotId={selectedSlotId}
+                  onSelect={(id) => { setSlotError(''); setSelectedSlotId(id) }}
+                  multi={isMultiSelect}
+                  selectedSlotIds={isMultiSelect ? (selectedDateSlotMap[selectedDateId] ?? []) : selectedSlotIds}
+                  onMultiSelect={(id) => {
+                    setSlotError('')
+                    if (isMultiSelect) {
+                      setSelectedDateSlotMap(prev => {
+                        const current = prev[selectedDateId] ?? []
+                        return {
+                          ...prev,
+                          [selectedDateId]: current.includes(id)
+                            ? current.filter(x => x !== id)
+                            : [...current, id],
+                        }
+                      })
+                    } else {
+                      setSelectedSlotId(id)
+                    }
+                  }}
+                />
+              ) : (
+                <p className="py-4 text-center text-sm text-gray-500">時間帯を読み込み中...</p>
+              )}
+            </Card>
+          )}
+
+          {/* Date Only (no time slots): 従来の日程選択UI */}
+          {event.use_multi_dates && !event.use_time_slots && (
+            <Card className="mb-6">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <Calendar className="h-5 w-5" />
+                参加する日程を選択してください
+              </h2>
+              {isMultiSelect && (
+                <p className="mb-3 text-xs text-blue-600">複数選択できます</p>
+              )}
+              {dateError && <p className="mb-3 text-sm text-red-600">{dateError}</p>}
               <div className="space-y-3">
                 {eventDates.map((d) => {
                   const isFull = d.remaining <= 0
                   const isSelected = isMultiSelect ? selectedDateIds.includes(d.id) : selectedDateId === d.id
-                  const isExpanded = isMultiSelect ? selectedDateIds.includes(d.id) : selectedDateId === d.id
                   return (
-                    <div key={d.id}>
-                      <button
-                        type="button"
-                        disabled={isFull}
-                        onClick={() => {
-                          setDateError('')
-                          setSlotError('')
-                          if (isMultiSelect) {
-                            setSelectedDateIds(prev =>
-                              prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
-                            )
-                          } else {
-                            setSelectedDateId(d.id)
-                            setSelectedSlotId('')
-                          }
-                        }}
-                        className={cn(
-                          'w-full rounded-lg border-2 p-4 text-left transition',
-                          isSelected
-                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                            : isFull
-                              ? 'cursor-not-allowed border-gray-200 bg-gray-100 opacity-50'
-                              : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {isMultiSelect && (
-                              <input type="checkbox" checked={isSelected} readOnly
-                                className="h-4 w-4 rounded border-gray-300 text-blue-600 pointer-events-none" />
-                            )}
-                            <div>
-                              <p className="font-semibold text-gray-900">{formatDate(d.event_date)}</p>
-                              <p className="text-sm text-gray-600">
-                                {d.start_time.slice(0, 5)}{d.end_time ? ` 〜 ${d.end_time.slice(0, 5)}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <span className={cn('text-sm font-medium', isFull ? 'text-red-500' : 'text-green-600')}>
-                            {isFull ? '満席' : `残り${d.remaining}枠`}
-                          </span>
-                        </div>
-                      </button>
-                      {isExpanded && event.use_time_slots && timeSlots.length > 0 && (
-                        <div className="mt-2 ml-2 rounded-lg border border-blue-100 bg-blue-50/50 p-3">
-                          <p className="mb-2 text-sm font-medium text-gray-700">
-                            <Clock className="mr-1 inline h-4 w-4" />
-                            {formatDate(d.event_date)} の時間帯
-                            {isMultiSelect && <span className="ml-1 text-xs text-blue-600">（複数選択可）</span>}
-                          </p>
-                          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                            {timeSlots.map((slot) => {
-                              const isSlotFull = slot.remaining <= 0
-                              const isSlotSelected = isMultiSelect
-                                ? (selectedDateSlotMap[d.id] ?? []).includes(slot.id)
-                                : selectedSlotId === slot.id
-                              return (
-                                <button
-                                  key={slot.id}
-                                  type="button"
-                                  disabled={isSlotFull}
-                                  onClick={() => {
-                                    setSlotError('')
-                                    if (isMultiSelect) {
-                                      setSelectedDateSlotMap(prev => {
-                                        const current = prev[d.id] ?? []
-                                        return {
-                                          ...prev,
-                                          [d.id]: current.includes(slot.id)
-                                            ? current.filter(id => id !== slot.id)
-                                            : [...current, slot.id],
-                                        }
-                                      })
-                                    } else {
-                                      setSelectedSlotId(slot.id)
-                                    }
-                                  }}
-                                  className={cn(
-                                    'rounded-lg border-2 px-3 py-2 text-center text-sm transition',
-                                    isSlotSelected
-                                      ? 'border-blue-500 bg-white ring-2 ring-blue-200'
-                                      : isSlotFull
-                                        ? 'cursor-not-allowed border-gray-200 bg-gray-100 opacity-50'
-                                        : 'border-gray-200 bg-white hover:border-blue-300'
-                                  )}
-                                >
-                                  <p className="font-semibold text-gray-900">
-                                    {slot.start_time.slice(0, 5)} 〜 {slot.end_time.slice(0, 5)}
-                                  </p>
-                                  <p className={cn('mt-0.5 text-xs', isSlotFull ? 'text-red-500' : 'text-green-600')}>
-                                    {isSlotFull ? '満席' : `残り${slot.remaining}枠`}
-                                  </p>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
+                    <button
+                      key={d.id}
+                      type="button"
+                      disabled={isFull}
+                      onClick={() => {
+                        setDateError('')
+                        if (isMultiSelect) {
+                          setSelectedDateIds(prev =>
+                            prev.includes(d.id) ? prev.filter(id => id !== d.id) : [...prev, d.id]
+                          )
+                        } else {
+                          setSelectedDateId(d.id)
+                        }
+                      }}
+                      className={cn(
+                        'w-full rounded-lg border-2 p-4 text-left transition',
+                        isSelected
+                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                          : isFull
+                            ? 'cursor-not-allowed border-gray-200 bg-gray-100 opacity-50'
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
                       )}
-                    </div>
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {isMultiSelect && (
+                            <input type="checkbox" checked={isSelected} readOnly
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 pointer-events-none" />
+                          )}
+                          <div>
+                            <p className="font-semibold text-gray-900">{formatDate(d.event_date)}</p>
+                            <p className="text-sm text-gray-600">
+                              {d.start_time.slice(0, 5)}{d.end_time ? ` 〜 ${d.end_time.slice(0, 5)}` : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={cn('text-sm font-medium', isFull ? 'text-red-500' : 'text-green-600')}>
+                          {isFull ? '満席' : `残り${d.remaining}枠`}
+                        </span>
+                      </div>
+                    </button>
                   )
                 })}
               </div>
@@ -629,46 +667,19 @@ export default function ReservationPage() {
                 {isMultiSelect && <span className="ml-2 text-xs text-blue-600">（複数選択可）</span>}
               </p>
               {slotError && <p className="mb-3 text-sm text-red-600">{slotError}</p>}
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {timeSlots.map((slot) => {
-                  const isFull = slot.remaining <= 0
-                  const isSelected = isMultiSelect
-                    ? selectedSlotIds.includes(slot.id)
-                    : selectedSlotId === slot.id
-                  return (
-                    <button
-                      key={slot.id}
-                      type="button"
-                      disabled={isFull}
-                      onClick={() => {
-                        setSlotError('')
-                        if (isMultiSelect) {
-                          setSelectedSlotIds(prev =>
-                            prev.includes(slot.id) ? prev.filter(id => id !== slot.id) : [...prev, slot.id]
-                          )
-                        } else {
-                          setSelectedSlotId(slot.id)
-                        }
-                      }}
-                      className={cn(
-                        'rounded-lg border-2 p-4 text-center transition',
-                        isSelected
-                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                          : isFull
-                            ? 'cursor-not-allowed border-gray-200 bg-gray-100 opacity-50'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                      )}
-                    >
-                      <p className="font-semibold text-gray-900">
-                        {slot.start_time.slice(0, 5)} 〜 {slot.end_time.slice(0, 5)}
-                      </p>
-                      <p className={cn('mt-1 text-sm', isFull ? 'text-red-500' : 'text-green-600')}>
-                        {isFull ? '満席' : `残り${slot.remaining}枠`}
-                      </p>
-                    </button>
+              <TimelineSlotPicker
+                slots={timeSlots}
+                selectedSlotId={selectedSlotId}
+                onSelect={(id) => { setSlotError(''); setSelectedSlotId(id) }}
+                multi={isMultiSelect}
+                selectedSlotIds={selectedSlotIds}
+                onMultiSelect={(id) => {
+                  setSlotError('')
+                  setSelectedSlotIds(prev =>
+                    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
                   )
-                })}
-              </div>
+                }}
+              />
             </Card>
           )}
 

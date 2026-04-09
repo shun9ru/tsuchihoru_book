@@ -70,6 +70,38 @@ export function getRemainingCapacity(
 }
 
 /**
+ * 予約の時間帯ラベルを取得する
+ * タイムスロット・日程・イベント本体の情報を優先順位で判定
+ */
+export function getSlotLabel(
+  r: {
+    event_time_slots?: { start_time: string; end_time: string } | null
+    event_dates?: { event_date: string; start_time: string; end_time: string | null } | null
+  },
+  event: { event_date: string; start_time: string; end_time: string } | null
+): string {
+  // タイムスロット + 日程がある場合
+  if (r.event_time_slots && r.event_dates) {
+    return `${formatDate(r.event_dates.event_date)} ${formatTime(r.event_time_slots.start_time)}〜${formatTime(r.event_time_slots.end_time)}`
+  }
+  // タイムスロットのみ
+  if (r.event_time_slots) {
+    const dateStr = event ? formatDate(event.event_date) : ''
+    return `${dateStr} ${formatTime(r.event_time_slots.start_time)}〜${formatTime(r.event_time_slots.end_time)}`
+  }
+  // 日程のみ
+  if (r.event_dates) {
+    const d = r.event_dates
+    return `${formatDate(d.event_date)} ${formatTime(d.start_time)}${d.end_time ? `〜${formatTime(d.end_time)}` : ''}`
+  }
+  // どちらもない場合はイベント本体の日時
+  if (event) {
+    return `${formatDate(event.event_date)} ${formatTime(event.start_time)}〜${formatTime(event.end_time)}`
+  }
+  return '-'
+}
+
+/**
  * クラス名を結合するユーティリティ
  */
 export function cn(

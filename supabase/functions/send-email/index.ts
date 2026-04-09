@@ -9,8 +9,6 @@
  *   EMAIL_FROM     - 送信元メールアドレス
  */
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 const EMAIL_FROM = Deno.env.get('EMAIL_FROM') || 'noreply@example.com'
 
@@ -18,7 +16,6 @@ interface EmailRequest {
   to: string
   subject: string
   body: string
-  // テンプレート変数置換用
   variables?: Record<string, string>
 }
 
@@ -35,17 +32,18 @@ interface BulkEmailRequest {
   event_date?: string
 }
 
-serve(async (req) => {
-  // CORSヘッダー
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { status: 200, headers: corsHeaders })
   }
 
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers })
-  }
+  const headers = { ...corsHeaders, 'Content-Type': 'application/json' }
 
   try {
     const { type, ...payload } = await req.json()

@@ -62,8 +62,8 @@ CREATE TABLE reservations (
   phone             text        NOT NULL,
   participant_count integer     NOT NULL DEFAULT 1,
   note              text,
-  status            text        NOT NULL DEFAULT 'confirmed'
-                                CHECK (status IN ('confirmed', 'cancelled', 'attended', 'no_show')),
+  status            text        NOT NULL DEFAULT 'pending_approval'
+                                CHECK (status IN ('pending_approval', 'confirmed', 'rejected', 'cancelled', 'attended', 'no_show')),
   agreed_to_caution boolean     NOT NULL DEFAULT false,
   agreed_at         timestamptz,
   caution_version   integer,
